@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Anti-Scraping / AI Crawler Defense -->
+    <meta name="robots" content="noai, noimageai, noindex, nofollow">
+    <title>J.A.R.V.I.S. Interface</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #070b14;
+            --panel-bg: #0d1424;
+            --border-color: #1a2a44;
+            --accent-cyan: #00d4ff;
+            --accent-blue: #0077ff;
+            --text-main: #e0e6ed;
+            --text-muted: #6c7a93;
+            --green-online: #00ff88;
+            --red-offline: #ff3366;
+            --gold: #ffaa00;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            background-color: var(--bg-dark); color: var(--text-main); font-family: 'Orbitron', sans-serif;
+            height: 100vh; overflow: hidden; display: flex; flex-direction: column;
+            user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;
+        }
+        input, textarea, select { user-select: text; -webkit-user-select: text; }
+
+        .top-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: var(--panel-bg); border-bottom: 1px solid var(--border-color);
+        }
+        .logo-area { display: flex; align-items: center; gap: 15px; }
+        .logo-text { font-size: 1.5rem; font-weight: 900; letter-spacing: 5px; color: var(--text-main); text-shadow: 0 0 10px rgba(255, 255, 255, 0.2); }
+        .status-badge {
+            display: flex; align-items: center; gap: 6px; background: rgba(0, 255, 136, 0.1);
+            color: var(--green-online); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+        .status-dot { width: 6px; height: 6px; background: var(--green-online); border-radius: 50%; box-shadow: 0 0 8px var(--green-online); }
+        .top-center { display: flex; align-items: center; gap: 20px; font-size: 0.9rem; color: var(--text-muted); }
+        .top-center span { display: flex; align-items: center; gap: 5px; background: var(--bg-dark); padding: 5px 15px; border-radius: 15px; border: 1px solid var(--border-color); }
+        
+        .dashboard { display: grid; grid-template-columns: 280px 1fr 380px; gap: 15px; padding: 15px; height: calc(100vh - 110px); }
+        
+        .left-sidebar { display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
+        .widget { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 15px; position: relative; }
+        .widget-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .widget-header span { display: flex; align-items: center; gap: 8px; color: var(--accent-cyan); }
+        
+        .stat-row { margin-bottom: 10px; }
+        .stat-label { display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 4px; color: var(--text-muted); }
+        .stat-bar-bg { width: 100%; height: 6px; background: #1a2333; border-radius: 3px; overflow: hidden; }
+        .stat-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)); border-radius: 3px; box-shadow: 0 0 8px var(--accent-cyan); }
+
+        .camera-box { width: 100%; height: 140px; background: #000; border-radius: 6px; display: flex; justify-content: center; align-items: center; border: 1px solid var(--border-color); position: relative; overflow: hidden; }
+        .camera-box video { width: 100%; height: 100%; object-fit: cover; display: none; }
+        .camera-off-text { color: var(--text-muted); font-size: 0.75rem; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+
+        .center-panel { display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
+        .reactor-container { position: relative; width: 350px; height: 350px; display: flex; justify-content: center; align-items: center; margin-bottom: 30px; }
+        .ring { position: absolute; border-radius: 50%; border: 1px solid var(--border-color); }
+        .ring-outer { width: 100%; height: 100%; border: 2px dashed rgba(0, 212, 255, 0.2); animation: spin 20s linear infinite; }
+        .ring-middle { width: 75%; height: 75%; border: 2px solid rgba(0, 212, 255, 0.4); box-shadow: 0 0 30px rgba(0, 212, 255, 0.1); animation: spin-reverse 15s linear infinite; }
+        .ring-inner { width: 45%; height: 45%; border: 3px solid rgba(0, 212, 255, 0.6); box-shadow: 0 0 40px rgba(0, 212, 255, 0.2), inset 0 0 20px rgba(0, 212, 255, 0.2); }
+        .core { width: 15%; height: 15%; background: var(--accent-cyan); border-radius: 50%; box-shadow: 0 0 30px var(--accent-cyan), 0 0 60px var(--accent-blue); display: flex; justify-content: center; align-items: center; gap: 4px; }
+        .core-dot { width: 4px; height: 4px; background: #fff; border-radius: 50%; animation: blink 1.5s infinite alternate; }
+        .core-dot:nth-child(2) { animation-delay: 0.3s; } .core-dot:nth-child(3) { animation-delay: 0.6s; } .core-dot:nth-child(4) { animation-delay: 0.9s; }
+        .center-title { font-size: 2rem; font-weight: 900; letter-spacing: 8px; margin-bottom: 15px; }
+        .status-pill { display: flex; align-items: center; gap: 8px; background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.3); color: var(--accent-cyan); padding: 8px 20px; border-radius: 20px; font-size: 0.8rem; letter-spacing: 1px; }
+        
+        .bottom-controls { display: flex; gap: 15px; margin-top: 40px; align-items: center; }
+        .control-btn { height: 50px; min-width: 50px; border-radius: 25px; background: var(--panel-bg); border: 1px solid var(--border-color); color: var(--text-muted); display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 1.2rem; transition: all 0.3s; padding: 0 15px; }
+        .control-btn:hover, .control-btn.active { border-color: var(--accent-cyan); color: var(--accent-cyan); box-shadow: 0 0 15px rgba(0, 212, 255, 0.4); }
+        .control-btn.analyze-btn { border-color: var(--gold); color: var(--gold); font-weight: bold; letter-spacing: 1px; font-size: 0.9rem; padding: 0 25px; }
+        .control-btn.analyze-btn:hover { background: var(--gold); color: var(--bg-dark); box-shadow: 0 0 20px var(--gold); }
+
+        .right-sidebar { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; }
+        .chat-header { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid var(--border-color); background: rgba(0, 0, 0, 0.2); }
+        .chat-header h3 { font-size: 0.9rem; color: var(--text-main); letter-spacing: 1px; }
+        .chat-action-btn { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); padding: 5px 10px; border-radius: 4px; font-family: 'Orbitron', sans-serif; font-size: 0.65rem; cursor: pointer; transition: all 0.3s; }
+        .chat-action-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+        .chat-log { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; font-size: 0.85rem; line-height: 1.5; }
+        .chat-message { max-width: 90%; padding: 12px 15px; border-radius: 8px; animation: fadeIn 0.3s ease; }
+        .chat-message.jarvis { background: rgba(0, 212, 255, 0.05); border: 1px solid rgba(0, 212, 255, 0.2); color: var(--text-main); align-self: flex-start; border-top-left-radius: 0; }
+        .chat-message.user { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; align-self: flex-end; border-top-right-radius: 0; }
+        .chat-input-area { padding: 15px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; background: rgba(0, 0, 0, 0.2); }
+        .chat-input-area input { flex: 1; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 10px 15px; border-radius: 6px; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; outline: none; transition: all 0.3s; }
+        .chat-input-area input:focus { border-color: var(--accent-cyan); box-shadow: 0 0 10px rgba(0, 212, 255, 0.2); }
+        .send-btn { background: var(--accent-blue); border: none; color: #fff; width: 40px; border-radius: 6px; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: all 0.3s; }
+        .send-btn:hover { background: var(--accent-cyan); box-shadow: 0 0 15px rgba(0, 212, 255, 0.5); }
+
+        /* --- DRAGGABLE TRADE PANEL --- */
+        .trade-panel {
+            position: fixed; bottom: 20px; left: 20px; width: 300px;
+            background: var(--panel-bg); border: 1px solid var(--accent-cyan);
+            border-radius: 10px; box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+            z-index: 1000; display: flex; flex-direction: column; overflow: hidden;
+            display: none; 
+        }
+        .trade-header {
+            background: rgba(0, 212, 255, 0.2); padding: 10px 15px; cursor: grab;
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.8rem; font-weight: bold; color: var(--accent-cyan);
+            border-bottom: 1px solid var(--accent-cyan); text-transform: uppercase; letter-spacing: 1px;
+        }
+        .trade-header:active { cursor: grabbing; }
+        .trade-content { padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .trade-item {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.8rem; padding: 10px; background: rgba(255, 255, 255, 0.03);
+            border-radius: 5px; border-left: 3px solid var(--border-color); transition: all 0.3s;
+        }
+        .trade-item:hover { background: rgba(255, 255, 255, 0.08); }
+        .trade-item .label { color: var(--text-muted); font-size: 0.7rem; }
+        .trade-item .value { font-weight: bold; }
+        
+        .trade-item.buy { border-left-color: #00ff88; }
+        .trade-item.buy .value { color: #00ff88; text-shadow: 0 0 5px rgba(0, 255, 136, 0.5); }
+        .trade-item.sell { border-left-color: #ff3366; }
+        .trade-item.sell .value { color: #ff3366; text-shadow: 0 0 5px rgba(255, 51, 102, 0.5); }
+        .trade-item.tp { border-left-color: var(--accent-cyan); }
+        .trade-item.tp .value { color: var(--accent-cyan); text-shadow: 0 0 5px rgba(0, 212, 255, 0.5); }
+        .trade-item.sl { border-left-color: var(--gold); }
+        .trade-item.sl .value { color: var(--gold); text-shadow: 0 0 5px rgba(255, 170, 0, 0.5); }
+
+        /* --- INSTANT ALERT OVERLAY --- */
+        .instant-alert {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            padding: 30px 60px; background: rgba(0, 0, 0, 0.85);
+            border: 3px solid var(--accent-cyan); border-radius: 15px;
+            font-size: 3rem; font-weight: 900; text-transform: uppercase;
+            letter-spacing: 5px; z-index: 9999; display: none;
+            text-align: center; box-shadow: 0 0 50px rgba(0, 212, 255, 0.8);
+            animation: flash 0.4s infinite alternate; pointer-events: none;
+        }
+        .instant-alert.buy { border-color: var(--green-online); color: var(--green-online); box-shadow: 0 0 50px var(--green-online); }
+        .instant-alert.sell { border-color: var(--red-offline); color: var(--red-offline); box-shadow: 0 0 50px var(--red-offline); }
+        .instant-alert.wait { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 50px var(--gold); }
+        @keyframes flash { from { opacity: 0.6; transform: translate(-50%, -50%) scale(0.98); } to { opacity: 1; transform: translate(-50%, -50%) scale(1.02); } }
+
+        /* --- LEGAL & CONSENT MODALS --- */
+        .legal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); z-index: 10000;
+            display: none; justify-content: center; align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        .legal-modal {
+            background: var(--panel-bg); border: 1px solid var(--accent-cyan);
+            border-radius: 10px; width: 80%; max-width: 700px; max-height: 80vh;
+            display: flex; flex-direction: column; box-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
+            animation: fadeIn 0.3s ease;
+        }
+        .legal-header {
+            padding: 15px 20px; border-bottom: 1px solid var(--border-color);
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0, 212, 255, 0.1);
+        }
+        .legal-header h2 { font-size: 1.1rem; color: var(--accent-cyan); letter-spacing: 2px; }
+        .legal-close { cursor: pointer; color: var(--red-offline); font-size: 1.2rem; font-weight: bold; }
+        .legal-body { padding: 20px; overflow-y: auto; font-size: 0.85rem; line-height: 1.6; color: var(--text-main); }
+        .legal-body h3 { color: var(--accent-cyan); margin: 15px 0 5px 0; font-size: 0.9rem; }
+        .legal-body p { margin-bottom: 10px; color: var(--text-muted); }
+        .legal-body ul { margin-left: 20px; margin-bottom: 10px; color: var(--text-muted); }
+        .legal-footer { padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; }
+
+        /* --- AGE VERIFICATION & COOKIE BANNER --- */
+        .age-shield {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-dark); z-index: 20000;
+            display: flex; justify-content: center; align-items: center; flex-direction: column;
+            text-align: center; padding: 20px;
+        }
+        .age-shield h1 { color: var(--accent-cyan); font-size: 2rem; letter-spacing: 5px; margin-bottom: 20px; text-shadow: 0 0 20px var(--accent-cyan); }
+        .age-shield p { color: var(--text-muted); max-width: 600px; margin-bottom: 30px; line-height: 1.6; font-size: 0.9rem; }
+        .age-shield .btn-group { display: flex; gap: 20px; }
+        .age-btn { padding: 15px 40px; font-family: 'Orbitron', sans-serif; font-size: 1rem; font-weight: bold; border: 2px solid var(--accent-cyan); background: transparent; color: var(--accent-cyan); cursor: pointer; border-radius: 8px; transition: all 0.3s; }
+        .age-btn:hover { background: var(--accent-cyan); color: var(--bg-dark); box-shadow: 0 0 20px var(--accent-cyan); }
+        .age-btn.deny { border-color: var(--red-offline); color: var(--red-offline); }
+        .age-btn.deny:hover { background: var(--red-offline); color: #fff; box-shadow: 0 0 20px var(--red-offline); }
+
+        .cookie-banner {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: var(--panel-bg); border-top: 2px solid var(--accent-cyan);
+            padding: 15px 25px; display: none; justify-content: space-between; align-items: center;
+            z-index: 15000; box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.5);
+        }
+        .cookie-banner p { font-size: 0.75rem; color: var(--text-muted); max-width: 70%; }
+        .cookie-btn { background: var(--accent-blue); border: none; color: #fff; padding: 10px 20px; border-radius: 5px; font-family: 'Orbitron', sans-serif; cursor: pointer; transition: all 0.3s; }
+        .cookie-btn:hover { background: var(--accent-cyan); box-shadow: 0 0 15px var(--accent-cyan); }
+
+        /* --- FOOTER --- */
+        .footer {
+            height: 45px; background: var(--panel-bg); border-top: 1px solid var(--border-color);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 25px; font-size: 0.65rem; color: var(--text-muted);
+        }
+        .footer-links a { color: var(--text-muted); text-decoration: none; margin-left: 15px; transition: color 0.3s; }
+        .footer-links a:hover { color: var(--accent-cyan); text-shadow: 0 0 5px var(--accent-cyan); }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes spin-reverse { 100% { transform: rotate(-360deg); } }
+        @keyframes blink { 0% { opacity: 0.2; } 100% { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-cyan); }
+        @media (max-width: 1200px) { .dashboard { grid-template-columns: 1fr; overflow-y: auto; height: auto; } body { overflow: auto; } .left-sidebar, .right-sidebar { height: 400px; } }
+    </style>
+</head>
+<body oncontextmenu="return false;"> <!-- Anti-Right Click -->
+
+    <!-- AGE VERIFICATION SHIELD -->
+    <div id="ageShield" class="age-shield">
+        <h1>AGE VERIFICATION</h1>
+        <p>This application uses advanced AI and displays financial trading concepts. By entering, you confirm that you are at least 13 years of age (or have parental consent) and agree to our Terms of Service, Privacy Policy, and Copyright Notices.</p>
+        <div class="btn-group">
+            <button class="age-btn" onclick="acceptAge()">I AGREE & ENTER</button>
+            <button class="age-btn deny" onclick="denyAge()">EXIT</button>
+        </div>
+    </div>
+
+    <!-- COOKIE CONSENT BANNER -->
+    <div id="cookieBanner" class="cookie-banner">
+        <p>🍪 This site uses cookies and AI processing to function. By continuing, you consent to our Cookie Policy and Terms of Service.</p>
+        <button class="cookie-btn" onclick="acceptCookies()">ACCEPT</button>
+    </div>
+
+    <header class="top-bar">
+        <div class="logo-area">
+            <div class="logo-text">J.A.R.V.I.S.</div>
+            <div class="status-badge"><div class="status-dot"></div> Online</div>
+        </div>
+        <div class="top-center">
+            <span id="clock">🕒 --:--:--</span>
+            <span id="date">📅 ---</span>
+        </div>
+        <div class="top-center">
+            <span>🌤️ 25.2°C Quezon City</span>
+        </div>
+    </header>
+
+    <div class="dashboard">
+        <div class="left-sidebar">
+            <div class="widget">
+                <div class="widget-header"><span>⚙️ System Stats</span><span style="cursor:pointer;" onclick="updateStats()">🔄</span></div>
+                <div class="stat-row">
+                    <div class="stat-label"><span>CPU Usage</span><span id="cpu-val">8%</span></div>
+                    <div class="stat-bar-bg"><div class="stat-bar-fill" id="cpu-bar" style="width: 8%;"></div></div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label"><span>RAM Usage</span><span id="ram-val">9.0 GB</span></div>
+                    <div class="stat-bar-bg"><div class="stat-bar-fill" id="ram-bar" style="width: 44%;"></div></div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label"><span>Disk</span><span id="disk-val">439/475 GB</span></div>
+                    <div class="stat-bar-bg"><div class="stat-bar-fill" id="disk-bar" style="width: 92%;"></div></div>
+                </div>
+            </div>
+
+            <div class="widget">
+                <div class="widget-header"><span>🌤️ Weather</span><span style="cursor:pointer;">🔄</span></div>
+                <div style="font-size: 1.8rem; font-weight: 700; margin-bottom: 5px;">25.2°C</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">Quezon City, PH<br>overcast clouds</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; text-align: center; font-size: 0.7rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 10px;">
+                    <div>Humidity<br><strong>94%</strong></div>
+                    <div>Wind<br><strong>5.8 m/s</strong></div>
+                    <div>Feels Like<br><strong>26.3°C</strong></div>
+                </div>
+            </div>
+
+            <div class="widget">
+                <div class="widget-header"><span>📷 Camera</span><span style="cursor:pointer; display:flex; gap:10px;"><span onclick="startScreenCapture()">📸</span><span onclick="stopScreenCapture()">⏹️</span></span></div>
+                <div class="camera-box">
+                    <video id="screenVideo" autoplay muted></video>
+                    <div class="camera-off-text" id="cameraOffText"><span>📷</span>Camera Off</div>
+                </div>
+                <div style="text-align: center; margin-top: 10px;">
+                    <button class="camera-btn" onclick="startScreenCapture()" style="background: var(--panel-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 5px 10px; border-radius: 4px; cursor: pointer; font-family: 'Orbitron', sans-serif; font-size: 0.7rem;">Start Camera</button>
+                </div>
+            </div>
+
+            <div class="widget">
+                <div class="widget-header"><span>🕒 System Uptime</span><span id="uptime-val">00:00:00</span></div>
+                <div class="stat-row">
+                    <div class="stat-label"><span>Session</span><span>1</span></div>
+                    <div class="stat-label"><span>Commands</span><span id="command-count">0</span></div>
+                </div>
+                <div class="stat-label" style="margin-top: 10px;"><span>System Load</span><span id="load-val">26%</span></div>
+                <div class="stat-bar-bg"><div class="stat-bar-fill" id="load-bar" style="width: 26%;"></div></div>
+            </div>
+        </div>
+
+        <div class="center-panel">
+            <div class="reactor-container">
+                <div class="ring ring-outer"></div>
+                <div class="ring ring-middle"></div>
+                <div class="ring ring-inner"></div>
+                <div class="core"><div class="core-dot"></div><div class="core-dot"></div><div class="core-dot"></div><div class="core-dot"></div></div>
+            </div>
+            <div class="center-title">J.A.R.V.I.S</div>
+            <div class="status-pill" id="statusPill"><div class="status-dot"></div> Listening for wake word...</div>
+            
+            <!-- UPDATED BOTTOM CONTROLS WITH ANALYZE BUTTON -->
+            <div class="bottom-controls">
+                <div class="control-btn" onclick="startScreenCapture()" title="Share Screen">📷</div>
+                <button class="control-btn analyze-btn" onclick="manualAnalyze()" title="Analyze Chart">ANALYZE</button>
+                <div class="control-btn" onclick="startVoiceInput()" title="Voice Command">🎤</div>
+                <div class="control-btn" onclick="document.getElementById('userInput').focus()" title="Keyboard">⌨️</div>
+            </div>
+        </div>
+
+        <div class="right-sidebar">
+            <div class="chat-header">
+                <h3>Conversation</h3>
+                <div class="chat-header-actions">
+                    <button class="chat-action-btn" onclick="clearChat()">Clear</button>
+                    <button class="chat-action-btn" onclick="extractChat()">Extract Conversation</button>
+                </div>
+            </div>
+            <div class="chat-log" id="chatLog">
+                <div class="chat-message jarvis">Hello, I am JARVIS. Click "Start Camera" to scan your TradingView chart. Then click the Camera icon at the bottom to analyze it. How can I assist you today sir?</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="userInput" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
+                <button class="send-btn" onclick="sendMessage()">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <div>© 2026 J.A.R.V.I.S. Systems. All Rights Reserved. All text, graphics, and code are protected intellectual property.</div>
+        <div class="footer-links">
+            <a href="#" onclick="openLegal('tos')">Terms of Service</a>
+            <a href="#" onclick="openLegal('privacy')">Privacy Policy</a>
+            <a href="#" onclick="openLegal('dmca')">DMCA & Report Infringement</a>
+            <a href="#" onclick="openLegal('ugc')">UGC & Copyright</a>
+        </div>
+    </div>
+
+    <!-- LEGAL MODAL -->
+    <div id="legalOverlay" class="legal-overlay">
+        <div class="legal-modal">
+            <div class="legal-header">
+                <h2 id="legalTitle">Legal Notice</h2>
+                <div class="legal-close" onclick="closeLegal()">✖</div>
+            </div>
+            <div class="legal-body" id="legalBody">
+                <!-- Content injected by JS -->
+            </div>
+            <div class="legal-footer">
+                <button class="age-btn" style="padding: 10px 20px; font-size: 0.8rem;" onclick="closeLegal()">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DRAGGABLE TRADE PANEL -->
+    <div id="tradePanel" class="trade-panel">
+        <div id="tradePanelHeader" class="trade-header">
+            <span>Trade Signal</span>
+            <span style="cursor:pointer; color: var(--red-offline);" onclick="document.getElementById('tradePanel').style.display='none'">✖</span>
+        </div>
+        <div class="trade-content" id="tradeContent">
+            <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem;">Awaiting analysis...</div>
+        </div>
+    </div>
+
+    <!-- INSTANT ALERT OVERLAY -->
+    <div id="instantAlert" class="instant-alert">
+        <div id="alertText">SIGNAL DETECTED</div>
+    </div>
+
+    <script>
+        let videoStream = null;
+        let isOnline = true;
+        let commandCount = 0;
+        let startTime = Date.now();
+        let isScanning = false;
+        
+        // RETRY LOGIC VARIABLES
+        let analysisRetries = 0;
+        const MAX_RETRIES = 3;
+
+        // --- LEGAL & CONSENT LOGIC ---
+        const legalContent = {
+            tos: `<h3>Terms of Service (ToS)</h3><p>By accessing J.A.R.V.I.S., you agree to these terms. This is a complete legal agreement outlining rules for using the site. You must not use this site for illegal activities. We reserve the right to modify these terms at any time.</p>
+                  <h3>Intellectual Property Clause</h3><p>All original text, logos, graphics, and code belong exclusively to J.A.R.V.I.S. Systems. Trademark Notice: All brand names, slogans, and logos are protected trademarks.</p>
+                  <h3>Limitation of Liability Clause</h3><p>We limit our financial and legal responsibility if copyright issues or site errors occur. Indemnification Clause: You agree to pay our legal fees if your actions get us sued.</p>
+                  <h3>Anti-Scraping Policy</h3><p>Bots and AI scrapers are strictly forbidden from stealing content.</p>`,
+            privacy: `<h3>Privacy Policy</h3><p>This is a mandatory disclosure detailing how we collect, use, and protect user data. We use cookies to enhance your experience and AI processing to provide trading analysis. Your data is never sold to third parties.</p>`,
+            dmca: `<h3>DMCA Takedown Policy</h3><p>We have a formal process for copyright owners to report alleged infringement. Designated DMCA Agent Info: [Your Name/Company], [Email], [Address].</p>
+                   <h3>Report Infringement Form</h3><p>Please email us at dmca@jarvis-systems.com with the subject "DMCA Takedown Request" including the URL of the infringing material and proof of ownership.</p>`,
+            ugc: `<h3>User-Generated Content (UGC) Protections</h3><p>UGC Ownership Clause: Users retain copyright to content they upload, but grant us a license to display it. UGC License Grant: You grant us a worldwide, royalty-free, perpetual license to host and share user content.</p>
+                  <h3>Copyright Notice Footprint</h3><p>© 2026 J.A.R.V.I.S. Systems. All Rights Reserved.</p>
+                  <h3>Fair Use Disclaimer</h3><p>Any copyrighted material used falls under legal "Fair Use" for commentary, criticism, or educational purposes. Third-Party Content Disclaimer: We disclaim liability for content, links, or advertisements provided by third parties.</p>`
+        };
+
+        function openLegal(type) {
+            const overlay = document.getElementById('legalOverlay');
+            const title = document.getElementById('legalTitle');
+            const body = document.getElementById('legalBody');
+            
+            if (type === 'tos') title.innerText = 'Terms of Service';
+            else if (type === 'privacy') title.innerText = 'Privacy Policy';
+            else if (type === 'dmca') title.innerText = 'DMCA & Report Infringement';
+            else if (type === 'ugc') title.innerText = 'UGC & Copyright Notices';
+            
+            body.innerHTML = legalContent[type] || '<p>Information not found.</p>';
+            overlay.style.display = 'flex';
+        }
+
+        function closeLegal() {
+            document.getElementById('legalOverlay').style.display = 'none';
+        }
+
+        function acceptAge() {
+            document.getElementById('ageShield').style.display = 'none';
+            document.getElementById('cookieBanner').style.display = 'flex';
+            initJarvis();
+        }
+
+        function denyAge() {
+            alert("Access denied. You must be of appropriate age to use this application.");
+            window.location.href = "about:blank";
+        }
+
+        function acceptCookies() {
+            document.getElementById('cookieBanner').style.display = 'none';
+        }
+
+        // --- DRAG LOGIC FOR TRADE PANEL ---
+        const panel = document.getElementById('tradePanel');
+        const panelHeader = document.getElementById('tradePanelHeader');
+        let isDragging = false;
+        let offsetX, offsetY;
+
+        panelHeader.onmousedown = (e) => {
+            isDragging = true;
+            offsetX = e.clientX - panel.getBoundingClientRect().left;
+            offsetY = e.clientY - panel.getBoundingClientRect().top;
+            panel.style.transition = 'none';
+        };
+        document.onmousemove = (e) => {
+            if (isDragging) {
+                panel.style.left = (e.clientX - offsetX) + 'px';
+                panel.style.top = (e.clientY - offsetY) + 'px';
+                panel.style.right = 'auto';
+                panel.style.bottom = 'auto';
+            }
+        };
+        document.onmouseup = () => {
+            isDragging = false;
+            panel.style.transition = 'all 0.3s';
+        };
+
+        function initJarvis() {
+            updateClock();
+            setInterval(updateClock, 1000);
+            setInterval(updateUptime, 1000);
+            setInterval(updateStats, 3000);
+            setTimeout(() => { speak("System initialized. JARVIS online. How may I assist you with your trading today, sir?"); }, 1000);
+        }
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').innerText = "🕒 " + now.toLocaleTimeString();
+            document.getElementById('date').innerText = "📅 " + now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        }
+
+        function updateUptime() {
+            const diff = Date.now() - startTime;
+            const hours = Math.floor(diff / 3600000).toString().padStart(2, '0');
+            const mins = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+            const secs = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+            document.getElementById('uptime-val').innerText = `${hours}:${mins}:${secs}`;
+        }
+
+        function updateStats() {
+            const cpu = Math.floor(Math.random() * 15) + 5;
+            const ram = Math.floor(Math.random() * 10) + 40;
+            const load = Math.floor(Math.random() * 20) + 20;
+            document.getElementById('cpu-val').innerText = cpu + "%";
+            document.getElementById('cpu-bar').style.width = cpu + "%";
+            document.getElementById('ram-val').innerText = (ram / 10 + 5).toFixed(1) + " GB";
+            document.getElementById('ram-bar').style.width = ram + "%";
+            document.getElementById('load-val').innerText = load + "%";
+            document.getElementById('load-bar').style.width = load + "%";
+        }
+
+        // --- SCREEN CAPTURE ---
+        async function startScreenCapture() {
+            if (isScanning) return;
+            try {
+                videoStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+                const video = document.getElementById('screenVideo');
+                video.srcObject = videoStream;
+                video.style.display = 'block';
+                document.getElementById('cameraOffText').style.display = 'none';
+                addMessage("SYSTEM: Visual sensors activated. Auto-analyzing in 2 seconds...", "jarvis");
+                updateStatus("Visual sensors active", true);
+
+                // AUTO-TRIGGER ANALYSIS ONCE VIDEO IS READY
+                video.onloadedmetadata = () => {
+                    video.play();
+                    // Wait 2 seconds for the screen share to fully render a frame, then scan
+                    setTimeout(() => {
+                        if(!isScanning && videoStream) {
+                            analysisRetries = 0; // Reset retry count for new screen share
+                            executeAnalysisWithRetry();
+                        }
+                    }, 2000);
+                };
+            } catch (err) {
+                addMessage("SYSTEM: Failed to access screen. " + err.message, "jarvis");
+            }
+        }
+
+        function stopScreenCapture() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+                document.getElementById('screenVideo').style.display = 'none';
+                document.getElementById('cameraOffText').style.display = 'flex';
+                isScanning = false;
+                addMessage("SYSTEM: Visual sensors deactivated.", "jarvis");
+                updateStatus("Listening for wake word...", false);
+            }
+        }
+
+        // --- MANUAL ANALYZE BUTTON ---
+        function manualAnalyze() {
+            if (!videoStream) {
+                addMessage("SYSTEM: Please start the camera / share your screen first.", "jarvis");
+                speak("Please share your screen first, sir.");
+                return;
+            }
+            if (isScanning) {
+                addMessage("SYSTEM: Analysis already in progress.", "jarvis");
+                return;
+            }
+            analysisRetries = 0; // Reset retries on manual click
+            executeAnalysisWithRetry();
+        }
+
+        // --- RETRY & ERROR HANDLING LOGIC ---
+        async function executeAnalysisWithRetry() {
+            if (analysisRetries >= MAX_RETRIES) {
+                const errorMsg = "Analysis failed after 3 attempts. The AI might be busy or the image is unclear. Please try again later, sir.";
+                addMessage("JARVIS: " + errorMsg, "jarvis");
+                speak(errorMsg);
+                document.getElementById('tradeContent').innerHTML = `<div style="color: var(--red-offline); text-align: center; font-size: 0.8rem; font-weight: bold;">⚠️ ERROR: Analysis failed after 3 attempts.</div>`;
+                document.getElementById('tradePanel').style.display = 'flex';
+                isScanning = false;
+                return;
+            }
+
+            analysisRetries++;
+            const attemptText = analysisRetries > 1 ? ` (Attempt ${analysisRetries}/${MAX_RETRIES})` : '';
+            
+            isScanning = true;
+            addMessage(`JARVIS: Scanning chart for signals...${attemptText}`, "jarvis");
+            if (analysisRetries === 1) speak("Scanning chart, sir. Identifying buy and sell zones.");
+
+            try {
+                const video = document.getElementById('screenVideo');
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const imageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+
+                const prompt = `You are JARVIS from Iron Man. Analyze this trading chart screenshot.
+                Provide your response exactly in this format. Do not add any other text, greetings, or explanations.
+                SIGNAL: [BUY or SELL or WAIT]
+                ENTRY: [Price]
+                TAKE PROFIT: [Price]
+                STOP LOSS: [Price]`;
+
+                await callAI(prompt, imageBase64, true);
+                
+                // If we reach here, it succeeded!
+                isScanning = false;
+            } catch (error) {
+                console.error("Attempt failed: ", error);
+                addMessage(`SYSTEM: Attempt ${analysisRetries} failed. ${error.message}. Retrying in 2 seconds...`, "jarvis");
+                // Wait 2 seconds before retrying
+                setTimeout(executeAnalysisWithRetry, 2000);
+            }
+        }
+
+        // --- CORE AI CALL FUNCTION ---
+        async function callAI(prompt, imageBase64 = null, isTradeAnalysis = false) {
+            let content = prompt;
+            if (imageBase64) {
+                content = [
+                    { type: "text", text: prompt },
+                    { type: "image_url", image_url: { url: imageBase64 } }
+                ];
+            }
+
+            const response = await fetch("https://text.pollinations.ai/openai", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    model: "openai",
+                    messages: [
+                        { role: "system", content: "You are JARVIS from Iron Man. Help a young trader. Keep answers short, cool, and precise. Always say 'Sir'. Output exactly as requested." },
+                        { role: "user", content: content }
+                    ]
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+                throw new Error("Malformed response from AI.");
+            }
+
+            const reply = data.choices[0].message.content;
+            
+            // Basic validation to ensure it's a trade signal if expected
+            if (isTradeAnalysis) {
+                if (!reply.toUpperCase().includes('SIGNAL') && !reply.toUpperCase().includes('BUY') && !reply.toUpperCase().includes('SELL') && !reply.toUpperCase().includes('WAIT')) {
+                     throw new Error("AI did not return a valid trade signal format.");
+                }
+            }
+
+            addMessage("JARVIS: " + reply, "jarvis");
+            speak(reply);
+            commandCount++;
+            document.getElementById('command-count').innerText = commandCount;
+
+            if (isTradeAnalysis) {
+                updateTradePanel(reply); // Throws if parsing fails
+            }
+        }
+
+        function updateTradePanel(text) {
+            const panel = document.getElementById('tradePanel');
+            const content = document.getElementById('tradeContent');
+            panel.style.display = 'flex';
+
+            content.innerHTML = '';
+
+            const lines = text.split('\n');
+            let found = false;
+            let signalText = 'WAIT';
+
+            lines.forEach(line => {
+                let cleanLine = line.replace(/[*#]/g, '').trim();
+                if (cleanLine.toUpperCase().startsWith('SIGNAL:')) {
+                    let val = cleanLine.split(':')[1].trim();
+                    signalText = val.toUpperCase();
+                    let type = val.toUpperCase().includes('BUY') ? 'buy' : val.toUpperCase().includes('SELL') ? 'sell' : '';
+                    content.innerHTML += `<div class="trade-item ${type}"><span class="label">SIGNAL</span><span class="value">${val}</span></div>`;
+                    found = true;
+                } else if (cleanLine.toUpperCase().startsWith('ENTRY:')) {
+                    let val = cleanLine.split(':')[1].trim();
+                    content.innerHTML += `<div class="trade-item"><span class="label">ENTRY</span><span class="value">${val}</span></div>`;
+                } else if (cleanLine.toUpperCase().startsWith('TAKE PROFIT:')) {
+                    let val = cleanLine.split(':')[1].trim();
+                    content.innerHTML += `<div class="trade-item tp"><span class="label">TAKE PROFIT</span><span class="value">${val}</span></div>`;
+                } else if (cleanLine.toUpperCase().startsWith('STOP LOSS:')) {
+                    let val = cleanLine.split(':')[1].trim();
+                    content.innerHTML += `<div class="trade-item sl"><span class="label">STOP LOSS</span><span class="value">${val}</span></div>`;
+                }
+            });
+
+            if (!found) {
+                throw new Error("Failed to parse trade signal from AI response.");
+            } else {
+                triggerInstantAlert(signalText);
+            }
+        }
+
+        function triggerInstantAlert(signal) {
+            const alertDiv = document.getElementById('instantAlert');
+            const textDiv = document.getElementById('alertText');
+            const upperSignal = signal.toUpperCase();
+            
+            alertDiv.className = 'instant-alert';
+            
+            if (upperSignal.includes('BUY')) {
+                alertDiv.classList.add('buy');
+                textDiv.innerText = '🚨 BUY SIGNAL 🚨';
+            } else if (upperSignal.includes('SELL')) {
+                alertDiv.classList.add('sell');
+                textDiv.innerText = '🚨 SELL SIGNAL 🚨';
+            } else {
+                alertDiv.classList.add('wait');
+                textDiv.innerText = '⏳ WAIT / HOLD ⏳';
+            }
+            
+            alertDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                alertDiv.style.display = 'none';
+            }, 4000);
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if (!text) return;
+            if (!isOnline) { speak("Please initialize the system first."); return; }
+
+            let imageBase64 = null;
+            let finalPrompt = text;
+
+            // If camera is active, grab a screenshot and force the AI to look at it
+            if (videoStream) {
+                const video = document.getElementById('screenVideo');
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                imageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+                
+                // SYSTEM OVERRIDE: Force AI to acknowledge the image
+                finalPrompt = `[SYSTEM OVERRIDE: A screenshot of the user's chart is attached. Analyze the image immediately. Do NOT ask for text details. Give me the SIGNAL, ENTRY, TAKE PROFIT, and STOP LOSS based on the image.] User said: ${text}`;
+            }
+
+            addMessage("YOU: " + text, "user");
+            input.value = "";
+
+            try {
+                // Note: isTradeAnalysis is FALSE here, so it won't try to update the trade panel. 
+                // It just chats. If you want it to analyze every time you type, change this to true.
+                await callAI(finalPrompt, imageBase64, false); 
+            } catch (error) {
+                addMessage("SYSTEM ERROR: " + error.message, "jarvis");
+                speak("I'm sorry sir, my connection failed. " + error.message);
+            }
+        }
+
+        function handleKeyPress(e) { if (e.key === 'Enter') sendMessage(); }
+
+        function addMessage(text, sender) {
+            const chatLog = document.getElementById('chatLog');
+            const div = document.createElement('div');
+            div.className = `chat-message ${sender}`;
+            div.innerText = text;
+            chatLog.appendChild(div);
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+        function clearChat() { document.getElementById('chatLog').innerHTML = '<div class="chat-message jarvis">Conversation cleared. How can I assist you, sir?</div>'; }
+        function extractChat() { alert("Conversation extracted!\n\n" + document.getElementById('chatLog').innerText); }
+
+        function speak(text) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.pitch = 0.8; utterance.rate = 1.0; utterance.volume = 1.0;
+            const voices = window.speechSynthesis.getVoices();
+            const britishVoice = voices.find(v => v.lang === 'en-GB' || v.name.includes('UK') || v.name.includes('British'));
+            if (britishVoice) utterance.voice = britishVoice;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function startVoiceInput() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) { alert("Your browser doesn't support voice input. Please use Google Chrome or Microsoft Edge."); return; }
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.onstart = () => { updateStatus("Listening...", true); addMessage("SYSTEM: Listening...", "jarvis"); };
+            recognition.onresult = (event) => { document.getElementById('userInput').value = event.results[0][0].transcript; sendMessage(); updateStatus("Listening for wake word...", false); };
+            recognition.onerror = (event) => { updateStatus("Listening for wake word...", false); addMessage("SYSTEM: Voice error - " + event.error, "jarvis"); };
+            recognition.onend = () => { updateStatus("Listening for wake word...", false); };
+            recognition.start();
+        }
+
+        function updateStatus(text, isActive) {
+            const pill = document.getElementById('statusPill');
+            pill.innerHTML = `<div class="status-dot" style="background: ${isActive ? 'var(--green-online)' : 'var(--accent-cyan)'}; box-shadow: 0 0 ${isActive ? '8px var(--green-online)' : '8px var(--accent-cyan)'};"></div> ${text}`;
+        }
+    </script>
+</body>
+</html>
